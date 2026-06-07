@@ -6,6 +6,7 @@ import com.skillforge.skillforge_api.auth.dto.response.AuthResponseDTO;
 import com.skillforge.skillforge_api.role.Role;
 import com.skillforge.skillforge_api.role.RoleName;
 import com.skillforge.skillforge_api.role.RoleRepository;
+import com.skillforge.skillforge_api.security.JwtService;
 import com.skillforge.skillforge_api.user.User;
 import com.skillforge.skillforge_api.user.UserRepository;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,6 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthResponseDTO register(RegisterRequestDTO request){
         if (userRepository.existsByEmail(request.email())){
@@ -37,20 +39,21 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return new AuthResponseDTO("Usuario registrado correctamente: ", user.getEmail());
+        return new AuthResponseDTO("Usuario registrado correctamente: ", user.getEmail(),null,null);
     }
 
     public AuthResponseDTO login(LoginRequestDTO login){
          Optional<User> userFound = userRepository.findByEmail(login.email());
         User user = userFound.orElseThrow(() ->
-                new UsernameNotFoundException("User not found with email: " + login.email()));
+                 new RuntimeException("Invalid credentials"));
 
 
         boolean isMatch = passwordEncoder.matches(login.password(), user.getPassword());
         if (!isMatch){
             throw new RuntimeException("Invalid credentials");
         }
-            return new AuthResponseDTO("welcome", user.getEmail());
+        String token = jwtService.generateToken(user.getEmail());
+        return new AuthResponseDTO("welcome", user.getEmail(),token,"Bearer");
     }
 
 
@@ -60,9 +63,10 @@ public class AuthService {
     }
 
 
-    public AuthService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 }
