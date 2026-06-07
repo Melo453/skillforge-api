@@ -1,5 +1,6 @@
 package com.skillforge.skillforge_api.auth;
 
+import com.skillforge.skillforge_api.auth.dto.request.LoginRequestDTO;
 import com.skillforge.skillforge_api.auth.dto.request.RegisterRequestDTO;
 import com.skillforge.skillforge_api.auth.dto.response.AuthResponseDTO;
 import jakarta.validation.Valid;
@@ -27,5 +28,11 @@ public class AuthController {
                 .status(HttpStatus.CREATED)
                 .body(response);
 
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO){
+        AuthResponseDTO response = authService.login(loginRequestDTO);
+        return ResponseEntity.ok(response);
     }
 }

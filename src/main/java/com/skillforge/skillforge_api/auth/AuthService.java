@@ -1,5 +1,6 @@
 package com.skillforge.skillforge_api.auth;
 
+import com.skillforge.skillforge_api.auth.dto.request.LoginRequestDTO;
 import com.skillforge.skillforge_api.auth.dto.request.RegisterRequestDTO;
 import com.skillforge.skillforge_api.auth.dto.response.AuthResponseDTO;
 import com.skillforge.skillforge_api.role.Role;
@@ -7,10 +8,12 @@ import com.skillforge.skillforge_api.role.RoleName;
 import com.skillforge.skillforge_api.role.RoleRepository;
 import com.skillforge.skillforge_api.user.User;
 import com.skillforge.skillforge_api.user.UserRepository;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -21,8 +24,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public AuthResponseDTO register(RegisterRequestDTO request){
-
-
         if (userRepository.existsByEmail(request.email())){
             throw new RuntimeException("Email already registered");
         }
@@ -38,6 +39,20 @@ public class AuthService {
 
         return new AuthResponseDTO("Usuario registrado correctamente: ", user.getEmail());
     }
+
+    public AuthResponseDTO login(LoginRequestDTO login){
+         Optional<User> userFound = userRepository.findByEmail(login.email());
+        User user = userFound.orElseThrow(() ->
+                new UsernameNotFoundException("User not found with email: " + login.email()));
+
+
+        boolean isMatch = passwordEncoder.matches(login.password(), user.getPassword());
+        if (!isMatch){
+            throw new RuntimeException("Invalid credentials");
+        }
+            return new AuthResponseDTO("welcome", user.getEmail());
+    }
+
 
     private Role getRoleByName(RoleName name){
         return roleRepository.findByName(name)
