@@ -5,11 +5,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
-public class HealthController {
+@RequestMapping("/api/v1/private")
+public class PrivateTestController {
 
-    @GetMapping("/v1")
+    @GetMapping("/test")
     public String sayRunning(){
-        return "SkillForge API is running";
+        return "Private endpoint works";
     }
 }
